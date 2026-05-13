@@ -1,0 +1,919 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>PhoneIQ — Smartphone Price Oracle</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=Plus+Jakarta+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+  <style>
+  /* ══════════════════════════════════════════════
+     DESIGN TOKENS — editorial warm dark
+  ══════════════════════════════════════════════ */
+  :root {
+    --ink:       #0E0C0A;
+    --paper:     #141210;
+    --card:      #1C1916;
+    --card2:     #221F1B;
+    --rule:      rgba(255,255,255,0.07);
+    --rule-h:    rgba(255,255,255,0.14);
+    --gold:      #E8B84B;
+    --gold2:     #F5D78E;
+    --amber:     #F97316;
+    --teal:      #2DD4BF;
+    --violet:    #A78BFA;
+    --rose:      #FB7185;
+    --text:      #EDE9E4;
+    --muted:     #6B655D;
+    --font-serif: 'Playfair Display', Georgia, serif;
+    --font-sans:  'Plus Jakarta Sans', system-ui, sans-serif;
+    --r:  14px;
+    --rs: 9px;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--ink);
+    color: var(--text);
+    font-family: var(--font-sans);
+    font-weight: 300;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── NOISE TEXTURE ──────────────────────────── */
+  body::before {
+    content: '';
+    position: fixed; inset: 0; z-index: 0; pointer-events: none;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+    background-size: 256px 256px;
+    opacity: 0.6;
+  }
+
+  /* ── GOLDEN GLOW ────────────────────────────── */
+  .glow-orb {
+    position: fixed; pointer-events: none; z-index: 0;
+    border-radius: 50%;
+    filter: blur(90px);
+  }
+  .glow-orb-1 {
+    width: 500px; height: 500px;
+    background: radial-gradient(circle, rgba(232,184,75,0.07) 0%, transparent 70%);
+    top: -150px; right: -100px;
+  }
+  .glow-orb-2 {
+    width: 400px; height: 400px;
+    background: radial-gradient(circle, rgba(45,212,191,0.05) 0%, transparent 70%);
+    bottom: -80px; left: -80px;
+  }
+
+  /* ── LAYOUT ─────────────────────────────────── */
+  .site { position: relative; z-index: 1; max-width: 1280px; margin: 0 auto; padding: 0 28px 100px; }
+
+  /* ── NAV ────────────────────────────────────── */
+  nav {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 30px 0 0;
+    margin-bottom: 72px;
+    border-bottom: 1px solid var(--rule);
+    padding-bottom: 22px;
+  }
+  .nav-brand {
+    display: flex; align-items: baseline; gap: 3px;
+  }
+  .nav-logo {
+    font-family: var(--font-serif);
+    font-style: italic;
+    font-size: 1.7rem;
+    font-weight: 700;
+    color: var(--gold);
+    letter-spacing: -0.02em;
+  }
+  .nav-dot { color: var(--amber); font-size: 1.4rem; line-height: 1; }
+  .nav-tagline {
+    font-size: 0.7rem;
+    font-weight: 500;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .nav-pills { display: flex; gap: 8px; }
+  .pill {
+    font-size: 0.7rem; font-weight: 500;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    padding: 6px 14px;
+    border: 1px solid var(--rule);
+    border-radius: 100px;
+    color: var(--muted);
+  }
+  .pill.active {
+    color: var(--gold);
+    border-color: rgba(232,184,75,0.3);
+    background: rgba(232,184,75,0.06);
+  }
+
+  /* ── MASTHEAD ───────────────────────────────── */
+  .masthead {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: end;
+    gap: 40px;
+    margin-bottom: 56px;
+  }
+  .masthead-eyebrow {
+    display: inline-flex; align-items: center; gap: 10px;
+    font-size: 0.7rem; font-weight: 600;
+    letter-spacing: 0.2em; text-transform: uppercase;
+    color: var(--amber);
+    margin-bottom: 20px;
+  }
+  .masthead-eyebrow span {
+    display: block; width: 28px; height: 1px; background: var(--amber);
+  }
+  h1 {
+    font-family: var(--font-serif);
+    font-size: clamp(2.8rem, 5vw, 4.6rem);
+    font-weight: 900;
+    line-height: 1.06;
+    letter-spacing: -0.03em;
+    color: var(--text);
+  }
+  h1 em {
+    font-style: italic;
+    color: var(--gold);
+  }
+  .masthead-sub {
+    font-size: 1rem;
+    line-height: 1.65;
+    color: var(--muted);
+    margin-top: 18px;
+    max-width: 480px;
+  }
+  .masthead-stat {
+    text-align: right;
+  }
+  .stat-number {
+    font-family: var(--font-serif);
+    font-size: 4.5rem;
+    font-weight: 900;
+    line-height: 1;
+    color: var(--gold);
+    opacity: 0.25;
+  }
+  .stat-label {
+    font-size: 0.7rem; font-weight: 500;
+    letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  /* ── MODEL SELECTOR ─────────────────────────── */
+  .model-strip {
+    display: flex; gap: 12px; margin-bottom: 40px;
+    padding-bottom: 32px;
+    border-bottom: 1px solid var(--rule);
+  }
+  .model-btn {
+    flex: 1; padding: 18px 20px;
+    background: var(--card);
+    border: 1px solid var(--rule);
+    border-radius: var(--r);
+    cursor: pointer;
+    transition: all 0.25s;
+    text-align: left;
+  }
+  .model-btn:hover { border-color: var(--rule-h); }
+  .model-btn.active {
+    border-color: var(--gold);
+    background: linear-gradient(135deg, rgba(232,184,75,0.1), rgba(232,184,75,0.04));
+    box-shadow: 0 0 40px rgba(232,184,75,0.08);
+  }
+  .model-btn-name {
+    font-family: var(--font-sans);
+    font-size: 0.85rem; font-weight: 600;
+    color: var(--text); margin-bottom: 4px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .model-btn.active .model-btn-name { color: var(--gold2); }
+  .model-radio {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    border: 2px solid var(--muted);
+    display: inline-block;
+    flex-shrink: 0;
+    transition: all 0.2s;
+  }
+  .model-btn.active .model-radio {
+    border-color: var(--gold);
+    background: var(--gold);
+    box-shadow: 0 0 8px var(--gold);
+  }
+  .model-btn-stat {
+    font-size: 0.72rem; color: var(--muted);
+  }
+  .model-btn-stat strong { color: var(--teal); font-weight: 600; }
+
+  /* ── MAIN LAYOUT ────────────────────────────── */
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr 380px;
+    gap: 24px;
+    align-items: start;
+  }
+  @media (max-width: 920px) { .two-col { grid-template-columns: 1fr; } }
+
+  /* ── FORM CARD ──────────────────────────────── */
+  .form-card {
+    background: var(--card);
+    border: 1px solid var(--rule);
+    border-radius: var(--r);
+    overflow: hidden;
+  }
+  .form-header {
+    padding: 24px 28px 20px;
+    border-bottom: 1px solid var(--rule);
+    display: flex; align-items: center; gap: 12px;
+  }
+  .form-header-icon {
+    width: 36px; height: 36px;
+    background: linear-gradient(135deg, var(--amber), var(--gold));
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; flex-shrink: 0;
+  }
+  .form-header-text {
+    font-size: 0.72rem; font-weight: 600;
+    letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--muted);
+  }
+  .form-body { padding: 28px; }
+
+  .field-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 18px;
+  }
+  @media (max-width: 700px) { .field-grid { grid-template-columns: 1fr 1fr; } }
+
+  .field { display: flex; flex-direction: column; gap: 7px; }
+  .field.span2 { grid-column: span 2; }
+  .field.span3 { grid-column: 1 / -1; }
+
+  label {
+    font-size: 0.72rem; font-weight: 500;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  select {
+    width: 100%;
+    background: var(--card2);
+    border: 1px solid var(--rule);
+    border-radius: var(--rs);
+    color: var(--text);
+    font-family: var(--font-sans);
+    font-size: 0.88rem; font-weight: 400;
+    padding: 11px 38px 11px 14px;
+    outline: none;
+    appearance: none; -webkit-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='7' viewBox='0 0 11 7'%3E%3Cpath d='M1 1l4.5 4.5L10 1' stroke='%23524D46' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 13px center;
+    cursor: pointer;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  select:focus {
+    border-color: var(--gold);
+    box-shadow: 0 0 0 3px rgba(232,184,75,0.1);
+  }
+  select option { background: #1C1916; }
+
+  /* Spec badges row */
+  .spec-badges {
+    display: flex; gap: 8px; flex-wrap: wrap;
+    margin-top: 20px; padding-top: 20px;
+    border-top: 1px solid var(--rule);
+  }
+  .spec-badge {
+    font-size: 0.72rem; font-weight: 500;
+    padding: 5px 12px;
+    border-radius: 100px;
+    border: 1px solid var(--rule);
+    color: var(--muted);
+    transition: all 0.2s;
+  }
+  .spec-badge.lit { color: var(--gold2); border-color: rgba(232,184,75,0.25); background: rgba(232,184,75,0.06); }
+
+  /* ── PREDICT BUTTON ─────────────────────────── */
+  .btn-wrap { padding: 0 28px 28px; }
+  .btn-predict {
+    width: 100%; padding: 17px;
+    background: linear-gradient(135deg, #E8B84B, #F97316);
+    color: #0E0C0A;
+    font-family: var(--font-serif);
+    font-size: 1.05rem; font-weight: 700;
+    font-style: italic;
+    letter-spacing: 0.01em;
+    border: none; border-radius: var(--rs);
+    cursor: pointer;
+    position: relative; overflow: hidden;
+    transition: transform 0.15s, box-shadow 0.2s, opacity 0.2s;
+  }
+  .btn-predict::after {
+    content: '';
+    position: absolute; inset: 0;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.18), transparent);
+    transform: translateX(-100%);
+    transition: transform 0.5s;
+  }
+  .btn-predict:hover::after { transform: translateX(100%); }
+  .btn-predict:hover { transform: translateY(-2px); box-shadow: 0 12px 36px rgba(232,184,75,0.28); }
+  .btn-predict:active { transform: translateY(0); }
+  .btn-predict.loading { opacity: 0.75; pointer-events: none; }
+  .btn-inner { display: flex; align-items: center; justify-content: center; gap: 10px; }
+  .spinner {
+    width: 16px; height: 16px;
+    border: 2px solid rgba(0,0,0,0.25);
+    border-top-color: #0E0C0A;
+    border-radius: 50%;
+    animation: spin 0.65s linear infinite;
+    display: none;
+  }
+  .btn-predict.loading .spinner { display: block; }
+  .btn-predict.loading .btn-label { opacity: 0.7; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── RIGHT COLUMN ───────────────────────────── */
+  .right-col { display: flex; flex-direction: column; gap: 16px; position: sticky; top: 20px; }
+
+  /* ── PRICE CARD ─────────────────────────────── */
+  .price-card {
+    background: var(--card);
+    border: 1px solid var(--rule);
+    border-radius: var(--r);
+    overflow: hidden;
+    position: relative;
+  }
+  .price-card-top {
+    padding: 28px 24px 22px;
+    position: relative;
+    text-align: center;
+  }
+  .price-card-top::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    background: linear-gradient(90deg, var(--gold), var(--amber));
+    transform: scaleX(0); transform-origin: left;
+    transition: transform 0.7s cubic-bezier(0.4,0,0.2,1);
+  }
+  .price-card.revealed .price-card-top::before { transform: scaleX(1); }
+
+  .price-empty-state {
+    padding: 20px 0;
+    color: var(--muted);
+    font-size: 0.88rem;
+    text-align: center;
+  }
+  .price-empty-state svg { margin: 0 auto 12px; display: block; opacity: 0.2; }
+
+  .price-tag-label {
+    font-size: 0.68rem; font-weight: 600;
+    letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--muted); margin-bottom: 14px;
+  }
+  .price-number {
+    font-family: var(--font-serif);
+    font-size: 3.4rem; font-weight: 900;
+    line-height: 1;
+    color: var(--gold);
+    opacity: 0;
+    transform: translateY(10px);
+    transition: opacity 0.5s, transform 0.5s;
+  }
+  .price-card.revealed .price-number { opacity: 1; transform: translateY(0); }
+  .price-range-txt {
+    font-size: 0.75rem; color: var(--muted);
+    margin-top: 8px;
+    opacity: 0; transition: opacity 0.4s 0.2s;
+  }
+  .price-card.revealed .price-range-txt { opacity: 1; }
+
+  /* Tier badge */
+  .tier-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 0.72rem; font-weight: 600;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    padding: 5px 14px; border-radius: 100px;
+    margin-top: 14px;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.1);
+    opacity: 0; transition: opacity 0.4s 0.3s;
+  }
+  .tier-badge::before {
+    content: ''; width: 6px; height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+  }
+  .price-card.revealed .tier-badge { opacity: 1; }
+
+  .price-card-bottom {
+    border-top: 1px solid var(--rule);
+    padding: 16px 24px;
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  .mini-stat { }
+  .mini-stat-label {
+    font-size: 0.65rem; font-weight: 500;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--muted); margin-bottom: 4px;
+  }
+  .mini-stat-val {
+    font-size: 0.95rem; font-weight: 600;
+    color: var(--text);
+  }
+  .mini-stat-val.teal { color: var(--teal); }
+  .mini-stat-val.violet { color: var(--violet); }
+
+  /* ── METRICS CARD ───────────────────────────── */
+  .metrics-card {
+    background: var(--card);
+    border: 1px solid var(--rule);
+    border-radius: var(--r);
+    padding: 20px 22px;
+  }
+  .metrics-title {
+    font-size: 0.68rem; font-weight: 600;
+    letter-spacing: 0.15em; text-transform: uppercase;
+    color: var(--muted); margin-bottom: 16px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .metrics-title::before {
+    content: ''; display: block; width: 14px; height: 1.5px; background: var(--amber);
+  }
+  .metric-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 9px 0; border-bottom: 1px solid var(--rule);
+  }
+  .metric-row:last-child { border-bottom: none; }
+  .metric-key { font-size: 0.78rem; color: var(--muted); }
+  .metric-val { font-size: 0.85rem; font-weight: 600; color: var(--text); }
+  .metric-val.gold-text { color: var(--gold); }
+
+  /* ── HISTORY ────────────────────────────────── */
+  .history-card {
+    background: var(--card);
+    border: 1px solid var(--rule);
+    border-radius: var(--r);
+    padding: 20px 22px;
+  }
+  .history-title {
+    font-size: 0.68rem; font-weight: 600;
+    letter-spacing: 0.15em; text-transform: uppercase;
+    color: var(--muted); margin-bottom: 14px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .history-title::before {
+    content: ''; display: block; width: 14px; height: 1.5px; background: var(--teal);
+  }
+  .history-items { display: flex; flex-direction: column; gap: 8px; max-height: 200px; overflow-y: auto; }
+  .history-items::-webkit-scrollbar { width: 3px; }
+  .history-items::-webkit-scrollbar-thumb { background: var(--rule-h); border-radius: 2px; }
+  .h-item {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 9px 12px;
+    background: var(--card2);
+    border-radius: var(--rs);
+    border: 1px solid var(--rule);
+  }
+  .h-item-info { font-size: 0.78rem; color: var(--muted); }
+  .h-item-info strong { color: var(--text); font-weight: 500; }
+  .h-item-price {
+    font-family: var(--font-serif);
+    font-weight: 700; font-size: 0.9rem;
+    color: var(--gold);
+  }
+  .h-empty { font-size: 0.8rem; color: var(--muted); text-align: center; padding: 16px 0; }
+
+  /* ── BRAND LOGO ROW ─────────────────────────── */
+  .brand-row {
+    margin-top: 48px; padding-top: 28px;
+    border-top: 1px solid var(--rule);
+    display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  }
+  .brand-row-label {
+    font-size: 0.65rem; font-weight: 600;
+    letter-spacing: 0.15em; text-transform: uppercase;
+    color: var(--muted); margin-right: 8px;
+  }
+  .brand-chip {
+    font-size: 0.72rem; font-weight: 500;
+    padding: 4px 12px; border-radius: 100px;
+    border: 1px solid var(--rule);
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .brand-chip:hover { border-color: var(--gold); color: var(--gold2); background: rgba(232,184,75,0.06); }
+
+  /* ── FOOTER ─────────────────────────────────── */
+  footer {
+    margin-top: 80px; padding-top: 24px;
+    border-top: 1px solid var(--rule);
+    display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;
+  }
+  .footer-brand {
+    font-family: var(--font-serif); font-style: italic;
+    font-size: 1rem; color: var(--gold); font-weight: 700;
+  }
+  .footer-note { font-size: 0.72rem; color: var(--muted); }
+
+  /* ── ANIMATIONS ─────────────────────────────── */
+  @keyframes fadeSlide { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
+  .fade-in { animation: fadeSlide 0.55s cubic-bezier(0.4,0,0.2,1) both; }
+  .d1 { animation-delay: 0.08s; }
+  .d2 { animation-delay: 0.16s; }
+  .d3 { animation-delay: 0.24s; }
+  .d4 { animation-delay: 0.32s; }
+
+  /* ── TOAST ──────────────────────────────────── */
+  .toast {
+    position: fixed; bottom: 24px; right: 24px; z-index: 9999;
+    background: var(--card2); border: 1px solid var(--rule);
+    border-left: 3px solid var(--rose);
+    padding: 12px 20px; border-radius: var(--rs);
+    font-size: 0.83rem; color: var(--rose);
+    transform: translateY(60px); opacity: 0;
+    transition: all 0.3s ease; pointer-events: none;
+  }
+  .toast.show { transform: translateY(0); opacity: 1; }
+  </style>
+</head>
+<body>
+
+<div class="glow-orb glow-orb-1"></div>
+<div class="glow-orb glow-orb-2"></div>
+
+<div class="site">
+
+  <!-- NAV -->
+  <nav class="fade-in">
+    <div class="nav-brand">
+      <span class="nav-logo">PhoneIQ</span><span class="nav-dot">·</span>
+    </div>
+    <p class="nav-tagline">Smartphone Price Oracle</p>
+    <div class="nav-pills">
+      <div class="pill active">KNN</div>
+      <div class="pill active">Random Forest</div>
+      <div class="pill">407 Phones</div>
+    </div>
+  </nav>
+
+  <!-- MASTHEAD -->
+  <div class="masthead fade-in d1">
+    <div>
+      <div class="masthead-eyebrow"><span></span> Machine Learning · Price Intelligence</div>
+      <h1>Predict Any<br><em>Smartphone's</em><br>Market Price</h1>
+      <p class="masthead-sub">Enter phone specifications and our trained ML models will estimate the fair market value — powered by a dataset of 407 real smartphones from 16 global brands.</p>
+    </div>
+    <div class="masthead-stat">
+      <div class="stat-number">407</div>
+      <div class="stat-label">Phones Trained</div>
+    </div>
+  </div>
+
+  <!-- MODEL SELECTOR -->
+  <div class="model-strip fade-in d2">
+    {% for key, info in model_info.items() %}
+    <button class="model-btn {% if loop.first %}active{% endif %}"
+            data-model="{{ key }}"
+            onclick="selectModel(this)">
+      <div class="model-btn-name">
+        <span class="model-radio"></span>
+        {{ info.name }}
+      </div>
+      <div class="model-btn-stat">
+        R² <strong>{{ info.r2 }}%</strong> &nbsp;·&nbsp;
+        MAE <strong>{{ info.mae }}</strong> &nbsp;·&nbsp;
+        RMSE {{ info.rmse }}
+      </div>
+    </button>
+    {% endfor %}
+  </div>
+
+  <!-- MAIN -->
+  <div class="two-col fade-in d3">
+
+    <!-- FORM -->
+    <div>
+      <div class="form-card">
+        <div class="form-header">
+          <div class="form-header-icon">📱</div>
+          <div class="form-header-text">Phone Specifications</div>
+        </div>
+        <div class="form-body">
+          <div class="field-grid">
+
+            <div class="field span3">
+              <label>Brand</label>
+              <select id="brand" onchange="updateBadges()">
+                {% for b in brands %}
+                <option value="{{ b }}">{{ b }}</option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <div class="field">
+              <label>Storage (GB)</label>
+              <select id="storage" onchange="updateBadges()">
+                {% for s in storage_options %}
+                <option value="{{ s }}" {% if s == 128 %}selected{% endif %}>{{ s }} GB</option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <div class="field">
+              <label>RAM (GB)</label>
+              <select id="ram" onchange="updateBadges()">
+                {% for r in ram_options %}
+                <option value="{{ r }}" {% if r == 6 %}selected{% endif %}>{{ r }} GB</option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <div class="field">
+              <label>Screen Size</label>
+              <select id="screen_size" onchange="updateBadges()">
+                {% for s in screen_sizes %}
+                <option value="{{ s }}" {% if s == 6.5 %}selected{% endif %}>{{ s }}"</option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <div class="field">
+              <label>Camera (MP)</label>
+              <select id="camera_mp" onchange="updateBadges()">
+                {% for c in camera_options %}
+                <option value="{{ c }}" {% if c == 48 %}selected{% endif %}>{{ c }} MP</option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <div class="field span2">
+              <label>Battery Capacity (mAh)</label>
+              <select id="battery_mah" onchange="updateBadges()">
+                {% for b in battery_options %}
+                <option value="{{ b }}" {% if b == 4500 %}selected{% endif %}>{{ b }} mAh</option>
+                {% endfor %}
+              </select>
+            </div>
+
+          </div>
+
+          <!-- Live spec badges -->
+          <div class="spec-badges" id="specBadges">
+            <span class="spec-badge lit" id="badge-brand">Samsung</span>
+            <span class="spec-badge lit" id="badge-storage">128GB</span>
+            <span class="spec-badge lit" id="badge-ram">6GB RAM</span>
+            <span class="spec-badge lit" id="badge-screen">6.5"</span>
+            <span class="spec-badge lit" id="badge-camera">48MP</span>
+            <span class="spec-badge lit" id="badge-battery">4500mAh</span>
+          </div>
+        </div>
+
+        <div class="btn-wrap">
+          <button class="btn-predict" id="predictBtn" onclick="predict()">
+            <div class="btn-inner">
+              <div class="spinner"></div>
+              <span class="btn-label">✦ Predict Market Price</span>
+            </div>
+          </button>
+        </div>
+      </div>
+
+      <!-- Brand Quick-Select -->
+      <div class="brand-row">
+        <span class="brand-row-label">Quick Brand</span>
+        {% for b in brands %}
+        <span class="brand-chip" onclick="setBrand('{{ b }}')">{{ b }}</span>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- RIGHT COLUMN -->
+    <div class="right-col fade-in d4">
+
+      <!-- PRICE CARD -->
+      <div class="price-card" id="priceCard">
+        <div class="price-card-top">
+          <div id="emptyState" class="price-empty-state">
+            <svg width="44" height="44" viewBox="0 0 44 44" fill="none">
+              <circle cx="22" cy="22" r="20" stroke="currentColor" stroke-width="1.2"/>
+              <rect x="16" y="12" width="12" height="20" rx="2" stroke="currentColor" stroke-width="1.2"/>
+              <circle cx="22" cy="29" r="1.5" fill="currentColor"/>
+            </svg>
+            Set specs & run prediction
+          </div>
+          <div id="priceResult" style="display:none">
+            <div class="price-tag-label">Estimated Price</div>
+            <div class="price-number" id="priceNum">$0</div>
+            <div class="price-range-txt" id="priceRangeTxt">—</div>
+            <div class="tier-badge" id="tierBadge">—</div>
+          </div>
+        </div>
+        <div class="price-card-bottom">
+          <div class="mini-stat">
+            <div class="mini-stat-label">Model</div>
+            <div class="mini-stat-val" id="mModel">—</div>
+          </div>
+          <div class="mini-stat">
+            <div class="mini-stat-label">R² Score</div>
+            <div class="mini-stat-val teal" id="mR2">—</div>
+          </div>
+          <div class="mini-stat">
+            <div class="mini-stat-label">Price Low</div>
+            <div class="mini-stat-val" id="mLow">—</div>
+          </div>
+          <div class="mini-stat">
+            <div class="mini-stat-label">Price High</div>
+            <div class="mini-stat-val violet" id="mHigh">—</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- METRICS -->
+      <div class="metrics-card">
+        <div class="metrics-title">Model Performance</div>
+        <div class="metric-row">
+          <span class="metric-key">Algorithm</span>
+          <span class="metric-val gold-text" id="pModel">—</span>
+        </div>
+        <div class="metric-row">
+          <span class="metric-key">R² Score</span>
+          <span class="metric-val" id="pR2">—</span>
+        </div>
+        <div class="metric-row">
+          <span class="metric-key">MAE</span>
+          <span class="metric-val" id="pMAE">—</span>
+        </div>
+        <div class="metric-row">
+          <span class="metric-key">RMSE</span>
+          <span class="metric-val" id="pRMSE">—</span>
+        </div>
+        <div class="metric-row">
+          <span class="metric-key">Tier</span>
+          <span class="metric-val" id="pTier">—</span>
+        </div>
+      </div>
+
+      <!-- HISTORY -->
+      <div class="history-card">
+        <div class="history-title">Prediction Log</div>
+        <div class="history-items" id="historyItems">
+          <div class="h-empty">No predictions yet</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <footer>
+    <span class="footer-brand">PhoneIQ</span>
+    <span class="footer-note">KNN (k=2) · Random Forest · 407 smartphones · 16 brands · Label Encoded</span>
+  </footer>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  let selectedModel = 'random_forest';
+  let history = [];
+
+  // ── Model selection ──────────────────────────────────────
+  function selectModel(el) {
+    document.querySelectorAll('.model-btn').forEach(b => b.classList.remove('active'));
+    el.classList.add('active');
+    selectedModel = el.dataset.model;
+  }
+
+  // ── Live spec badges ─────────────────────────────────────
+  function updateBadges() {
+    document.getElementById('badge-brand').textContent   = document.getElementById('brand').value;
+    document.getElementById('badge-storage').textContent = document.getElementById('storage').value + 'GB';
+    document.getElementById('badge-ram').textContent     = document.getElementById('ram').value + 'GB RAM';
+    document.getElementById('badge-screen').textContent  = document.getElementById('screen_size').value + '"';
+    document.getElementById('badge-camera').textContent  = document.getElementById('camera_mp').value + 'MP';
+    document.getElementById('badge-battery').textContent = document.getElementById('battery_mah').value + 'mAh';
+  }
+  updateBadges();
+
+  // ── Quick brand ──────────────────────────────────────────
+  function setBrand(name) {
+    document.getElementById('brand').value = name;
+    updateBadges();
+  }
+
+  // ── Predict ──────────────────────────────────────────────
+  async function predict() {
+    const btn = document.getElementById('predictBtn');
+    btn.classList.add('loading');
+
+    const payload = {
+      brand:       document.getElementById('brand').value,
+      storage:     document.getElementById('storage').value,
+      ram:         document.getElementById('ram').value,
+      screen_size: document.getElementById('screen_size').value,
+      camera_mp:   document.getElementById('camera_mp').value,
+      battery_mah: document.getElementById('battery_mah').value,
+      model_type:  selectedModel
+    };
+
+    try {
+      const res  = await fetch('/predict', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload) });
+      const data = await res.json();
+      if (data.success) {
+        showResult(data, payload);
+        addHistory(data, payload);
+      } else {
+        showToast('Error: ' + data.error);
+      }
+    } catch(e) {
+      showToast('Network error — is the server running?');
+    } finally {
+      btn.classList.remove('loading');
+    }
+  }
+
+  // ── Animate & render result ──────────────────────────────
+  function showResult(data, payload) {
+    const card = document.getElementById('priceCard');
+    document.getElementById('emptyState').style.display = 'none';
+    document.getElementById('priceResult').style.display = 'block';
+
+    // Animated counter
+    const el = document.getElementById('priceNum');
+    const target = data.price;
+    const start = performance.now();
+    const duration = 750;
+    (function tick(now) {
+      const p = Math.min((now - start) / duration, 1);
+      const ease = 1 - Math.pow(1 - p, 3);
+      el.textContent = '$' + Math.round(target * ease).toLocaleString();
+      if (p < 1) requestAnimationFrame(tick);
+      else el.textContent = '$' + target.toLocaleString('en', { minimumFractionDigits:2, maximumFractionDigits:2 });
+    })(start);
+
+    document.getElementById('priceRangeTxt').textContent =
+      `Range $${data.price_low.toLocaleString()} – $${data.price_high.toLocaleString()}`;
+
+    const badge = document.getElementById('tierBadge');
+    badge.textContent = data.tier;
+    badge.style.color = data.tier_color;
+    badge.style.borderColor = data.tier_color + '40';
+    badge.style.background = data.tier_color + '10';
+
+    card.classList.add('revealed');
+
+    // Mini stats
+    document.getElementById('mModel').textContent = data.model_name;
+    document.getElementById('mR2').textContent    = data.r2 + '%';
+    document.getElementById('mLow').textContent   = '$' + data.price_low.toLocaleString();
+    document.getElementById('mHigh').textContent  = '$' + data.price_high.toLocaleString();
+
+    // Metrics panel
+    document.getElementById('pModel').textContent = data.model_name;
+    document.getElementById('pR2').textContent    = data.r2 + '%';
+    document.getElementById('pMAE').textContent   = '$' + data.mae;
+    document.getElementById('pRMSE').textContent  = '$' + data.rmse;
+    document.getElementById('pTier').textContent  = data.tier;
+    document.getElementById('pTier').style.color  = data.tier_color;
+  }
+
+  // ── History ──────────────────────────────────────────────
+  function addHistory(data, payload) {
+    history.unshift({ data, payload });
+    if (history.length > 8) history.pop();
+    const el = document.getElementById('historyItems');
+    el.innerHTML = history.map(h => `
+      <div class="h-item">
+        <div class="h-item-info">
+          <strong>${h.payload.brand}</strong> · ${h.payload.ram}GB · ${h.payload.storage}GB
+        </div>
+        <div class="h-item-price">$${h.data.price.toLocaleString('en',{minimumFractionDigits:0,maximumFractionDigits:0})}</div>
+      </div>
+    `).join('');
+  }
+
+  // ── Toast ────────────────────────────────────────────────
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 3500);
+  }
+</script>
+</body>
+</html>
